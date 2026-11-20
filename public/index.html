@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Circulation Desk – Library Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1d2b3a;--muted:#5d6b79;--bg:#eef1f3;--panel:#fff;--line:#d5dce1;--accent:#2e6f5e;--accent-ink:#fff;--warn:#a8561b;--danger:#b3402f;--ok-bg:#e1efe9;--warn-bg:#f8e8d8;--danger-bg:#f6dedb;--sans:'Instrument Sans',system-ui,sans-serif;--serif:'Newsreader',Georgia,serif}
+@media (prefers-color-scheme:dark){:root{--ink:#e8edf1;--muted:#9aa8b5;--bg:#141c24;--panel:#1c2630;--line:#2c3945;--accent:#5fb59d;--accent-ink:#0f1a17;--warn:#e3a46b;--danger:#f08a7a;--ok-bg:#1d3a31;--warn-bg:#3a2c1e;--danger-bg:#3d2320}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans)}
+header{background:var(--ink);color:var(--bg);padding:18px 28px 0}
+@media (prefers-color-scheme:dark){header{background:#0e141a;color:#e8edf1}}
+h1{font:600 28px/1.1 var(--serif);margin:0 0 14px;letter-spacing:.2px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav button{background:none;border:0;color:inherit;opacity:.65;font:500 15px var(--sans);padding:10px 16px;cursor:pointer;border-bottom:3px solid transparent}
+nav button[aria-selected=true]{opacity:1;border-color:var(--accent)}
+nav button:hover{opacity:1}
+main{max-width:1100px;margin:0 auto;padding:24px 28px 60px}
+h2{font:600 22px var(--serif);margin:0}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.bar h2{margin-right:auto}
+input,select,button,textarea{font:inherit;color:inherit}
+input,select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 10px;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:8px 14px;font-weight:600;cursor:pointer}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:none;color:var(--danger);border:1px solid var(--line)}
+.btn.sm{padding:4px 10px;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:24px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+.stat b{display:block;font:600 34px/1.1 var(--serif)}
+.stat span{color:var(--muted);font-size:13px}
+.stat.alert b{color:var(--danger)}
+.wrap{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-weight:600;color:var(--muted);font-size:13px}
+tr:last-child td{border-bottom:0}
+td.act{white-space:nowrap;text-align:right}
+td.act .btn{margin-left:6px}
+.sub{color:var(--muted);font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600}
+.pill.ok{background:var(--ok-bg);color:var(--accent)}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.bad{background:var(--danger-bg);color:var(--danger)}
+.empty{padding:36px;text-align:center;color:var(--muted)}
+dialog{border:1px solid var(--line);border-radius:10px;padding:0;background:var(--panel);color:var(--ink);width:min(460px,92vw)}
+dialog::backdrop{background:rgba(10,18,26,.55)}
+form{padding:22px;display:grid;gap:12px}
+form h2{margin-bottom:4px}
+label{display:grid;gap:4px;font-size:13px;font-weight:500;color:var(--muted)}
+label input,label select{color:var(--ink);font-size:15px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}
+#toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:8px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.show{opacity:1}#toast.err{background:var(--danger);color:#fff}
+.top ol{margin:0;padding-left:20px}.top li{padding:4px 0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px 22px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:600px){main{padding:18px 14px}header{padding:16px 14px 0}.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Circulation Desk</h1>
+  <nav role="tablist" id="tabs">
+    <button role="tab" data-tab="dashboard" aria-selected="true">Dashboard</button>
+    <button role="tab" data-tab="books">Books</button>
+    <button role="tab" data-tab="members">Members</button>
+    <button role="tab" data-tab="loans">Loans</button>
+  </nav>
+</header>
+<main id="view"></main>
+<dialog id="dlg"></dialog>
+<div id="toast" role="status"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = d => d ? new Date(d).toLocaleDateString(undefined, {day:'numeric',month:'short',year:'numeric'}) : '';
+const dateInput = d => new Date(d).toISOString().slice(0,10);
+let tab = 'dashboard', timer;
+
+async function api(path, method = 'GET', body) {
+  const res = await fetch('/api/' + path, { method, headers: {'Content-Type':'application/json'}, body: body ? JSON.stringify(body) : undefined });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Request failed.');
+  return data;
+}
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(timer); timer = setTimeout(() => t.className = '', 3200);
+}
+async function run(fn, ok) { try { await fn(); if (ok) toast(ok); } catch (e) { toast(e.message, true); } }
+
+document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => {
+  tab = b.dataset.tab;
+  document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b));
+  render();
+});
+function render() { ({dashboard, books, members, loans})[tab](); }
+
+/* ---------- Dashboard ---------- */
+async function dashboard() {
+  await run(async () => {
+    const s = await api('stats');
+    $('#view').innerHTML = `
+      <div class="stats">
+        <div class="stat"><b>${s.titles}</b><span>Titles</span></div>
+        <div class="stat"><b>${s.availableCopies}<small style="font-size:18px;color:var(--muted)"> / ${s.totalCopies}</small></b><span>Copies on shelf</span></div>
+        <div class="stat"><b>${s.members}</b><span>Members</span></div>
+        <div class="stat"><b>${s.active}</b><span>Books on loan</span></div>
+        <div class="stat ${s.overdue ? 'alert' : ''}"><b>${s.overdue}</b><span>Overdue</span></div>
+      </div>
+      <div class="panel top"><h2 style="margin-bottom:10px">Most borrowed</h2>
+      ${s.topBooks.length ? `<ol>${s.topBooks.map(b => `<li>${esc(b.title)} <span class="sub">by ${esc(b.author)} · ${b.loans} loan${b.loans>1?'s':''}</span></li>`).join('')}</ol>` : '<p class="sub">No loans yet. Issue a book from the Loans tab to see it here.</p>'}
+      </div>`;
+  });
+}
+
+/* ---------- Books ---------- */
+let bookQ = '';
+async function books() {
+  $('#view').innerHTML = `<div class="bar"><h2>Books</h2>
+    <input id="q" type="search" placeholder="Search title, author or ISBN" value="${esc(bookQ)}" aria-label="Search books">
+    <button class="btn" id="add">Add book</button></div><div class="wrap" id="list"></div>`;
+  $('#add').onclick = () => bookForm();
+  let t; $('#q').oninput = e => { bookQ = e.target.value; clearTimeout(t); t = setTimeout(loadBooks, 250); };
+  loadBooks();
+}
+async function loadBooks() {
+  await run(async () => {
+    const list = await api('books?q=' + encodeURIComponent(bookQ));
+    $('#list').innerHTML = list.length ? `<table><thead><tr><th>Title</th><th>Genre</th><th>ISBN</th><th>Availability</th><th></th></tr></thead><tbody>
+      ${list.map(b => `<tr><td><b>${esc(b.title)}</b><div class="sub">${esc(b.author)}${b.year ? ', ' + b.year : ''}</div></td>
+      <td>${esc(b.genre)}</td><td class="sub">${esc(b.isbn)}</td>
+      <td><span class="pill ${b.availableCopies ? 'ok' : 'bad'}">${b.availableCopies} of ${b.totalCopies} in</span></td>
+      <td class="act"><button class="btn ghost sm" data-edit='${esc(JSON.stringify(b))}'>Edit</button><button class="btn danger sm" data-del="${b._id}">Delete</button></td></tr>`).join('')}
+      </tbody></table>` : `<div class="empty">${bookQ ? 'No books match your search.' : 'No books yet. Add your first book to start the catalogue.'}</div>`;
+    $('#list').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => bookForm(JSON.parse(b.dataset.edit)));
+    $('#list').querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirm('Delete this book?') && run(async () => { await api('books/' + b.dataset.del, 'DELETE'); loadBooks(); }, 'Book deleted'));
+  });
+}
+function bookForm(b = {}) {
+  openForm(b._id ? 'Edit book' : 'Add book', `
+    <label>Title<input name="title" required value="${esc(b.title)}"></label>
+    <label>Author<input name="author" required value="${esc(b.author)}"></label>
+    <div class="row"><label>ISBN<input name="isbn" required value="${esc(b.isbn)}"></label>
+    <label>Genre<input name="genre" value="${esc(b.genre || 'General')}"></label></div>
+    <div class="row"><label>Year<input name="year" type="number" value="${esc(b.year)}"></label>
+    <label>Copies<input name="totalCopies" type="number" min="1" required value="${esc(b.totalCopies || 1)}"></label></div>`,
+    async d => { d.year = d.year ? +d.year : undefined; d.totalCopies = +d.totalCopies;
+      await api('books' + (b._id ? '/' + b._id : ''), b._id ? 'PUT' : 'POST', d); loadBooks(); },
+    b._id ? 'Book updated' : 'Book added');
+}
+
+/* ---------- Members ---------- */
+let memQ = '';
+async function members() {
+  $('#view').innerHTML = `<div class="bar"><h2>Members</h2>
+    <input id="q" type="search" placeholder="Search name or email" value="${esc(memQ)}" aria-label="Search members">
+    <button class="btn" id="add">Add member</button></div><div class="wrap" id="list"></div>`;
+  $('#add').onclick = () => memberForm();
+  let t; $('#q').oninput = e => { memQ = e.target.value; clearTimeout(t); t = setTimeout(loadMembers, 250); };
+  loadMembers();
+}
+async function loadMembers() {
+  await run(async () => {
+    const list = await api('members?q=' + encodeURIComponent(memQ));
+    $('#list').innerHTML = list.length ? `<table><thead><tr><th>Name</th><th>Phone</th><th>On loan</th><th>Status</th><th></th></tr></thead><tbody>
+      ${list.map(m => `<tr><td><b>${esc(m.name)}</b><div class="sub">${esc(m.email)}</div></td><td>${esc(m.phone)}</td>
+      <td>${m.activeLoans}</td><td><span class="pill ${m.active ? 'ok' : 'warn'}">${m.active ? 'Active' : 'Inactive'}</span></td>
+      <td class="act"><button class="btn ghost sm" data-edit='${esc(JSON.stringify(m))}'>Edit</button><button class="btn danger sm" data-del="${m._id}">Delete</button></td></tr>`).join('')}
+      </tbody></table>` : `<div class="empty">${memQ ? 'No members match your search.' : 'No members yet. Add a member so you can issue books.'}</div>`;
+    $('#list').querySelectorAll('[data-edit]').forEach(b => b.onclick = () => memberForm(JSON.parse(b.dataset.edit)));
+    $('#list').querySelectorAll('[data-del]').forEach(b => b.onclick = () => confirm('Delete this member?') && run(async () => { await api('members/' + b.dataset.del, 'DELETE'); loadMembers(); }, 'Member deleted'));
+  });
+}
+function memberForm(m = {}) {
+  openForm(m._id ? 'Edit member' : 'Add member', `
+    <label>Name<input name="name" required value="${esc(m.name)}"></label>
+    <label>Email<input name="email" type="email" required value="${esc(m.email)}"></label>
+    <label>Phone<input name="phone" value="${esc(m.phone)}"></label>
+    <label>Status<select name="active"><option value="true" ${m.active !== false ? 'selected' : ''}>Active</option><option value="false" ${m.active === false ? 'selected' : ''}>Inactive</option></select></label>`,
+    async d => { d.active = d.active === 'true'; await api('members' + (m._id ? '/' + m._id : ''), m._id ? 'PUT' : 'POST', d); loadMembers(); },
+    m._id ? 'Member updated' : 'Member added');
+}
+
+/* ---------- Loans ---------- */
+let loanStatus = 'active';
+async function loans() {
+  $('#view').innerHTML = `<div class="bar"><h2>Loans</h2>
+    <select id="st" aria-label="Filter loans"><option value="active">On loan</option><option value="overdue">Overdue</option><option value="returned">Returned</option><option value="">All</option></select>
+    <button class="btn" id="add">Issue book</button></div><div class="wrap" id="list"></div>`;
+  $('#st').value = loanStatus; $('#st').onchange = e => { loanStatus = e.target.value; loadLoans(); };
+  $('#add').onclick = issueForm;
+  loadLoans();
+}
+async function loadLoans() {
+  await run(async () => {
+    const list = await api('loans' + (loanStatus ? '?status=' + loanStatus : ''));
+    $('#list').innerHTML = list.length ? `<table><thead><tr><th>Book</th><th>Member</th><th>Issued</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>
+      ${list.map(l => `<tr><td><b>${esc(l.book?.title || 'Deleted book')}</b></td><td>${esc(l.member?.name || 'Deleted member')}</td>
+      <td>${fmt(l.issuedAt)}</td><td>${fmt(l.dueDate)}</td>
+      <td>${l.returnedAt ? `<span class="pill ok">Returned ${fmt(l.returnedAt)}</span>${l.fine ? ` <span class="pill bad">Fine ₹${l.fine}</span>` : ''}`
+        : l.overdue ? `<span class="pill bad">Overdue · ₹${l.pendingFine}</span>` : '<span class="pill warn">On loan</span>'}</td>
+      <td class="act">${l.returnedAt ? '' : `<button class="btn ghost sm" data-ret="${l._id}">Return</button>`}</td></tr>`).join('')}
+      </tbody></table>` : '<div class="empty">No loans in this view.</div>';
+    $('#list').querySelectorAll('[data-ret]').forEach(b => b.onclick = () => run(async () => {
+      const r = await api('loans/' + b.dataset.ret + '/return', 'POST');
+      toast(r.fine ? `Returned late. Fine: ₹${r.fine}` : 'Book returned'); loadLoans();
+    }));
+  });
+}
+async function issueForm() {
+  await run(async () => {
+    const [bk, mm] = await Promise.all([api('books'), api('members')]);
+    const avail = bk.filter(b => b.availableCopies > 0), act = mm.filter(m => m.active);
+    if (!avail.length || !act.length) return toast(!act.length ? 'Add an active member first.' : 'No copies are available to issue.', true);
+    openForm('Issue book', `
+      <label>Book<select name="bookId" required>${avail.map(b => `<option value="${b._id}">${esc(b.title)} (${b.availableCopies} in)</option>`).join('')}</select></label>
+      <label>Member<select name="memberId" required>${act.map(m => `<option value="${m._id}">${esc(m.name)}</option>`).join('')}</select></label>
+      <label>Loan period (days)<input name="days" type="number" min="1" max="90" value="14"></label>`,
+      async d => { d.days = +d.days; await api('loans', 'POST', d); loadLoans(); }, 'Book issued');
+  });
+}
+
+/* ---------- Shared dialog ---------- */
+function openForm(title, fields, onSubmit, okMsg) {
+  const dlg = $('#dlg');
+  dlg.innerHTML = `<form method="dialog"><h2>${esc(title)}</h2>${fields}
+    <div class="foot"><button type="button" class="btn ghost" id="cancel">Cancel</button><button class="btn">Save</button></div></form>`;
+  $('#cancel').onclick = () => dlg.close();
+  dlg.querySelector('form').onsubmit = e => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    run(async () => { await onSubmit(data); dlg.close(); }, okMsg);
+  };
+  dlg.showModal();
+}
+render();
+</script>
+</body>
+</html>
